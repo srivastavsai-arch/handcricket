@@ -1,4 +1,4 @@
-/* Prototype 3.5 gesture classifier — experimental camera input.
+/* Gesture classifier — camera input.
  *
  * Pure geometry on hand landmarks. No DOM, no game rules, no network.
  * Input: 21 landmarks in MediaPipe order, each {x,y,z} or [x,y,z].
@@ -175,6 +175,6 @@
 
   window.HCGestures = {
     classifyLandmarks,
-    _debug: { fingerShape, thumbShape, angleDeg, dist },
+    _helpers: { fingerShape, thumbShape, angleDeg, dist },
   };
 })();

@@ -1,4 +1,4 @@
-/* Prototype 3.5 camera input — experimental layer on top of Prototype 2.
+/* Camera input — optional layer on top of pad play.
  *
  * Safety rules:
  * - Nothing here runs on page load. No permission prompt, no webcam,
@@ -6,7 +6,7 @@
  * - The click pad keeps working. Camera submits through the SAME sink
  *   (provider.provide) with the SAME acceptance gate as keyboard input.
  * - Any failure (denied, no hardware, load error, unreliable reads)
- *   leaves Prototype 2 fully playable. Back to Click Mode stops hardware.
+ *   leaves pad play fully working. Back to Click Mode stops hardware.
  *
  * State flow (release is mandatory, never skipped):
  *   READY -> DETECTING (needs several steady frames) -> GESTURE CONFIRMED

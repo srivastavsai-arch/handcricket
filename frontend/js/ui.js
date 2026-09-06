@@ -46,7 +46,7 @@ function renderRulebook() {
   });
 }
 
-/** Prototype pad. Each button calls provider.provide(n). Buttons stay
+/** Number pad. Each button calls provider.provide(n). Buttons stay
  *  modular: the engine never sees the DOM, only the int. */
 function renderPad(provider, onPick) {
   const pad = $('movePad');
@@ -165,7 +165,7 @@ function flashResult(text, isOut) {
   el.classList.add(isOut ? 'out' : 'runs');
 }
 
-/** Tiny AI status line (§17): coarse state only. Never the prediction. */
+/** Tiny AI status line: coarse state only. Never the prediction. */
 function setAiStatus(text, pattern) {
   const el = $('aiStatus');
   if (!el) return;

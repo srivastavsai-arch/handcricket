@@ -1,4 +1,4 @@
-/* Hand Cricket v2. Futuristic blueprint scoreboard plus adaptive AI chrome. */
+/* Hand Cricket. Futuristic blueprint scoreboard plus adaptive AI chrome. */
 :root{
   --bg:#060b14; --panel:#0b1424; --panel2:#0e1a2f;
   --line:rgba(125,249,255,.16); --cyan:#7df9ff; --cyan-dim:#3fa9bc;
@@ -30,7 +30,26 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);min-height:10
 img,svg{max-width:100%}
 /* Grid/flex children must be allowed to shrink instead of forcing their
    track wider than the viewport (classic overflow root cause). */
-.score-strip>*,.arena-wrap>*,.duel>*,.break-scores>*,.diff-grid>*,.rules-foot>*,.topbar>*,.rulebook>*,.move-pad>*,.row>*,.cam-panel>*,.cam-body>*,.cam-status>*,.cam-top>*{min-width:0;max-width:100%}
+.score-strip>*,.arena-wrap>*,.duel>*,.break-scores>*,.diff-grid>*,.rules-foot>*,.topbar>*,.rulebook>*,.move-pad>*,.row>*,.cam-panel>*,.cam-body>*,.cam-status>*,.cam-top>*,.site-strip>*,.hero>*,.brand-foot>*{min-width:0;max-width:100%}
+/* Top-left website redirect. Subtle strip, always left aligned. */
+.site-strip{position:relative;z-index:6;display:flex;justify-content:flex-start;align-items:center;
+  padding:7px 14px 0;background:transparent;max-width:100%}
+.site-back{display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-decoration:none;
+  color:var(--muted);border:1px solid var(--line);border-radius:999px;
+  padding:6px 12px;background:rgba(125,249,255,.04);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.site-back:hover,.site-back:focus-visible{color:var(--cyan);border-color:var(--cyan);outline:none}
+.site-back:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+.site-back-arrow{color:var(--cyan);flex:none}
+/* Hero subtext kept to roughly two lines. Balanced wrapping. */
+.lede{max-width:540px;text-wrap:balance}
+/* Developer credit below the main introductory content. */
+.dev-credit{margin:4px auto 0;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted)}
+/* Touch-first controls. Fast tap, no highlight, no selection. */
+button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
+  touch-action:manipulation}
 .bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:linear-gradient(rgba(125,249,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(125,249,255,.05) 1px,transparent 1px);
   background-size:34px 34px;
@@ -176,7 +195,7 @@ img,svg{max-width:100%}
 .pad-btn b{display:block;font-family:var(--mono);font-size:17px;color:var(--cyan)}
 .pad-btn small{display:block;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pad-btn.locked{opacity:.4;pointer-events:none}
-/* Prototype 3 camera mode. Compact vertical layer above Choose Your Number:
+/* Camera mode. Compact vertical layer above Choose Your Number:
    Camera Preview -> Camera Status/Confirmation -> Choose Your Number. */
 .cam-toggle{margin-top:10px}
 .btn.small{padding:9px 14px;font-size:11px}
@@ -186,7 +205,7 @@ img,svg{max-width:100%}
 .cam-title{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--cyan)}
 .cam-body{display:grid;grid-template-columns:1fr;gap:10px;align-items:start;min-width:0}
 .cam-video-wrap{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;
-  background:rgba(6,11,20,.9);aspect-ratio:4/3;width:min(100%,400px);max-height:38vh;margin:0 auto;min-width:0}
+  background:rgba(6,11,20,.9);aspect-ratio:4/3;width:min(100%,400px,calc(38vh * 1.3333));margin:0 auto;min-width:0}
 .cam-video-wrap video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
 .cam-video-wrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .cam-status{display:grid;gap:6px;min-width:0;max-width:560px;width:100%;margin:0 auto;text-align:center}
@@ -215,15 +234,19 @@ img,svg{max-width:100%}
 .winner.lose{color:var(--red);text-shadow:0 0 34px rgba(255,84,112,.45)}
 .mini-history{list-style:none;margin:14px 0;padding:0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--mono);font-size:11px}
 .mini-history li{border:1px solid var(--line);padding:5px 9px;border-radius:999px;background:rgba(125,249,255,.04)}
-/* brand footer. VortexFlow Media credit. */
+/* brand footer. */
 .brand-foot{position:relative;z-index:1;text-align:center;background:rgba(6,11,20,.65);
-  border-top:1px solid var(--line);padding:6px 16px calc(8px + env(safe-area-inset-bottom,0px))}
+  border-top:1px solid var(--line);padding:8px 16px calc(10px + env(safe-area-inset-bottom,0px))}
 .brand-foot p{margin:0;font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--muted)}
+.brand-foot .foot-main{overflow-wrap:break-word}
 .brand-foot a{display:inline-block;color:var(--cyan);font-weight:700;letter-spacing:2px;text-decoration:none;
-  border-bottom:1px solid rgba(125,249,255,.45);padding:14px 10px;transition:text-shadow .2s ease,border-color .2s ease}
+  border-bottom:1px solid rgba(125,249,255,.45);padding:12px 8px;transition:text-shadow .2s ease,border-color .2s ease}
 .brand-foot a:hover,.brand-foot a:focus-visible{text-shadow:0 0 18px rgba(125,249,255,.8);border-bottom-color:var(--cyan);outline:none}
 .brand-foot a:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;border-radius:4px}
-/* difficulty select (Prototype 2). Names only, identity kept via tier colour. */
+.brand-foot .red-word{color:var(--red);font-weight:800;letter-spacing:2px}
+.brand-foot .foot-dev{margin-top:2px;font-size:11px;letter-spacing:1.5px;color:var(--muted)}
+.brand-foot .foot-dev u{text-underline-offset:3px;color:var(--muted)}
+/* difficulty select. Names only, identity kept via tier colour. */
 .panel.wide{max-width:920px;margin:30px auto}
 .diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0 10px}
 .diff-card{cursor:pointer;text-align:center;color:var(--txt);border:1px solid var(--line);border-radius:16px;
@@ -242,7 +265,7 @@ img,svg{max-width:100%}
 @keyframes aiPulse{0%,100%{opacity:.65}50%{opacity:1}}
 @media(max-width:860px){
   .diff-grid{grid-template-columns:1fr;gap:8px;margin:16px 0 8px}
-  .diff-card{padding:12px 14px}
+  .diff-card{padding:12px 14px;min-height:52px}
   .diff-tier{font-size:20px;letter-spacing:2px}
   .score-strip{grid-template-columns:1fr 1fr}
   .score-mid{grid-column:1/-1;grid-template-columns:1fr 1fr;order:3}
@@ -252,10 +275,14 @@ img,svg{max-width:100%}
   .history.below-pad{max-height:220px}
   .cam-panel{padding:12px}
   .cam-body{gap:8px}
-  .cam-video-wrap{width:min(100%,380px);max-height:34vh}
+  .cam-video-wrap{width:min(100%,380px,calc(34vh * 1.3333))}
 }
-/* compact header on narrow phones */
+/* ============ MOBILE PORTRAIT: native, compact, camera-first ============
+   Score (top) + camera (bottom) share visual weight ~50/50.
+   Camera keeps its 4/3 ratio. Nothing is stretched or squashed. */
 @media(max-width:600px){
+  .site-strip{padding:6px 10px 0}
+  .site-back{font-size:10px;padding:8px 12px;min-height:36px}
   .topbar{padding:10px 12px;gap:8px}
   .brand{gap:8px}
   .brand-mark{width:34px;height:34px;font-size:13px;flex:none}
@@ -264,12 +291,16 @@ img,svg{max-width:100%}
   .phase-pill{font-size:9px;letter-spacing:1px;padding:5px 10px;white-space:nowrap}
   .kicker{letter-spacing:2px}
   .brand-foot p{font-size:11px}
+  .brand-foot .foot-dev{font-size:10px}
+  .brand-foot a{padding:10px 8px}
+  .dev-credit{font-size:10px}
+  .lede{font-size:14.5px;line-height:1.55}
   /* compact difficulty: tight but tappable */
   .panel.wide{margin:20px auto}
   .diff-grid{gap:8px;margin:14px 0 8px}
   .diff-card{padding:12px 10px;min-height:52px;border-radius:12px}
   .diff-tier{font-size:19px;letter-spacing:2px}
-  /* finger gesture rulebook: proper compact 3 column mobile grid */
+  /* finger gesture rulebook: compact 3 column mobile grid */
   .rulebook{grid-template-columns:repeat(3,1fr);gap:8px}
   .g-card{padding:8px 6px;border-radius:10px}
   .g-card:hover{transform:none;box-shadow:none}
@@ -280,30 +311,39 @@ img,svg{max-width:100%}
   .section-head{margin:26px 0 12px}
   .rules-foot{margin:14px 0}
   .rule-note{padding:12px}
+  /* game: tighter vertical rhythm on phones */
+  .btn.small{padding:10px 14px;font-size:11px;min-height:40px}
+  .cam-toggle{margin-top:8px}
 }
 @media(max-width:560px){
-  .shell{padding:16px 10px 60px}
-  .hero{padding:22px 4px 6px}
-  .score-card{padding:10px}
+  .shell{padding:14px 10px 56px}
+  .hero{padding:20px 4px 6px}
+  .hero-actions{margin:16px 0 8px}
+  .hero-actions .btn.big{padding:14px 24px;font-size:14px}
+  .score-strip{gap:8px;margin-bottom:10px}
+  .score-card{padding:10px 8px}
   .score-card label{font-size:9px;letter-spacing:1.5px;overflow-wrap:break-word}
   .score-num{font-size:clamp(24px,8.5vw,32px)}
-  .score-mid{padding:10px 12px;min-width:0}
+  .score-mid{padding:10px 12px;min-width:0;gap:4px}
   .mid-row{font-size:11px;letter-spacing:1px}
-  .arena{padding:14px 10px}
+  .arena{padding:12px 10px}
   .duel{gap:6px}
-  .vs{width:50px;height:50px;font-size:16px;flex:none}
+  .vs{width:48px;height:48px;font-size:15px;flex:none}
   .duelist label{font-size:10px;letter-spacing:1px}
   .duelist label span{margin-left:4px;padding:1px 5px}
   .move-card{padding:8px 6px}
   .move-card span{font-size:22px;right:8px;bottom:6px}
+  .result-flash{min-height:36px;font-size:clamp(16px,5vw,24px)}
+  .ai-status{font-size:10px;letter-spacing:2px;min-height:16px}
   .history{padding:12px}
-  .history.below-pad{margin-top:10px;max-height:200px}
+  .history.below-pad{margin-top:10px;max-height:160px}
   .history ol{font-size:11px}
-  .pad-head{margin:14px 0 8px}
+  .pad-head{margin:12px 0 8px}
   .cam-panel{padding:10px 8px;margin:10px 0 2px}
   .cam-top{gap:8px;margin-bottom:8px}
-  .cam-video-wrap{width:min(100%,320px);max-height:30vh}
-  .cam-status{gap:5px}
+  .cam-video-wrap{width:min(100%,340px,calc(32vh * 1.3333));aspect-ratio:4/3}
+  .cam-video-wrap video{object-fit:cover}
+  .cam-status{gap:5px;max-width:100%}
   .cam-line{font-size:11px}
   .cam-line.big{font-size:16px}
   .cam-progress{height:8px}
@@ -318,13 +358,99 @@ img,svg{max-width:100%}
   .g-num{font-size:15px}
   .g-name{font-size:9px}
 }
+/* ---- Camera ON in portrait: balanced top/bottom halves ---- */
+@media(max-width:600px) and (orientation:portrait){
+  #screen-game.cam-on .score-strip,
+  #screen-game:has(#camPanel:not(.hidden)) .score-strip{gap:8px;margin-bottom:8px}
+  #screen-game.cam-on .score-card,
+  #screen-game:has(#camPanel:not(.hidden)) .score-card{padding:10px 8px;border-radius:12px}
+  #screen-game.cam-on .score-num,
+  #screen-game:has(#camPanel:not(.hidden)) .score-num{font-size:clamp(22px,7.5vw,30px)}
+  #screen-game.cam-on .role-tag,
+  #screen-game:has(#camPanel:not(.hidden)) .role-tag{margin-top:6px;font-size:9px;padding:3px 8px}
+  #screen-game.cam-on .score-mid,
+  #screen-game:has(#camPanel:not(.hidden)) .score-mid{padding:8px 10px;gap:3px}
+  #screen-game.cam-on .mid-row,
+  #screen-game:has(#camPanel:not(.hidden)) .mid-row{font-size:10px}
+  #screen-game.cam-on .arena,
+  #screen-game:has(#camPanel:not(.hidden)) .arena{padding:10px 8px}
+  #screen-game.cam-on .move-card img,
+  #screen-game:has(#camPanel:not(.hidden)) .move-card img{height:72px}
+  #screen-game.cam-on .result-flash,
+  #screen-game:has(#camPanel:not(.hidden)) .result-flash{min-height:32px;font-size:clamp(15px,4.6vw,22px);margin-top:10px}
+  #screen-game.cam-on .ai-status,
+  #screen-game:has(#camPanel:not(.hidden)) .ai-status{margin-top:6px;font-size:10px;min-height:15px}
+  #screen-game.cam-on .chase,
+  #screen-game:has(#camPanel:not(.hidden)) .chase{height:26px;margin-top:8px}
+  #screen-game.cam-on .cam-panel,
+  #screen-game:has(#camPanel:not(.hidden)) .cam-panel{padding:10px 8px;margin:8px 0 2px}
+  #screen-game.cam-on .cam-video-wrap,
+  #screen-game:has(#camPanel:not(.hidden)) .cam-video-wrap{
+    width:min(100%,calc(42vh * 1.3333));max-width:100%;margin:0 auto;
+    aspect-ratio:4/3;min-height:0}
+  #screen-game.cam-on .cam-video-wrap video,
+  #screen-game:has(#camPanel:not(.hidden)) .cam-video-wrap video{
+    width:100%;height:100%;object-fit:cover}
+  #screen-game.cam-on .cam-status,
+  #screen-game:has(#camPanel:not(.hidden)) .cam-status{max-width:100%;gap:5px;margin-top:8px}
+  #screen-game.cam-on .history.below-pad,
+  #screen-game:has(#camPanel:not(.hidden)) .history.below-pad{max-height:120px;margin-top:8px}
+  #screen-game.cam-on .pad-head,
+  #screen-game:has(#camPanel:not(.hidden)) .pad-head{margin:10px 0 6px}
+}
 @media(max-width:520px){
   .move-pad{grid-template-columns:repeat(5,1fr);gap:6px}
-  .pad-btn{padding:6px 2px 8px}
+  .pad-btn{padding:6px 2px 8px;min-height:56px}
   .pad-btn small{display:none}
   .pad-btn b{font-size:15px}
-  .pad-btn img{height:52px}
+  .pad-btn img{height:48px}
   .duel{grid-template-columns:1fr auto 1fr}
-  .move-card img{height:96px}
+  .move-card img{height:88px}
   .break-scores{grid-template-columns:1fr 1fr 1fr}
+}
+/* 430 / 412 / 390 / 375 / 360: same fluid grid, only tighten text so
+   nothing clips and nothing forces sideways scroll. */
+@media(max-width:430px){
+  .shell{padding:12px 10px 52px}
+  .hero h1{font-size:clamp(40px,14.5vw,64px)}
+  .score-mid{min-width:0}
+  .mid-row{font-size:10.5px}
+  .move-card img{height:84px}
+  .pad-btn img{height:46px}
+}
+@media(max-width:375px){
+  .topbar{padding:9px 10px}
+  .site-strip{padding:6px 8px 0}
+  .shell{padding:12px 8px 50px}
+  .score-strip{gap:6px}
+  .score-card{padding:8px 6px}
+  .score-mid{padding:8px 10px}
+  .arena{padding:10px 8px}
+  .vs{width:44px;height:44px;font-size:14px}
+  .move-card img{height:78px}
+  .pad-btn{min-height:54px}
+  .pad-btn img{height:44px}
+  .pad-btn b{font-size:14px}
+  .rulebook{gap:5px}
+  .g-card img{height:50px}
+}
+/* 320: smallest common phone. Everything must still fit side by side. */
+@media(max-width:360px){
+  .brand-title{font-size:11px;letter-spacing:1.5px}
+  .phase-pill{font-size:8px;padding:4px 8px}
+  .site-back{font-size:10px;padding:7px 10px}
+  .score-num{font-size:clamp(22px,8vw,28px)}
+  .mid-row{font-size:10px;letter-spacing:.5px}
+  .move-pad{gap:5px}
+  .pad-btn{min-height:52px;padding:5px 1px 7px}
+  .pad-btn img{height:42px}
+  .pad-btn b{font-size:13px}
+  .duelist label{font-size:9px}
+  .move-card img{height:72px}
+  .rulebook{grid-template-columns:repeat(3,1fr);gap:5px}
+  .g-card img{height:48px}
+  .g-num{font-size:14px}
+  .g-name{font-size:8px}
+  #screen-game.cam-on .cam-video-wrap,
+  #screen-game:has(#camPanel:not(.hidden)) .cam-video-wrap{width:min(100%,calc(40vh * 1.3333))}
 }

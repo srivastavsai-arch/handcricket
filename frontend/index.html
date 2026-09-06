@@ -9,6 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+<div class="site-strip" aria-label="VortexFlow Media website link">
+  <a class="site-back" href="https://www.vortexflowmedia.site" target="_blank" rel="noopener noreferrer" aria-label="Back to VortexFlow Media website"><span class="site-back-arrow" aria-hidden="true">←</span><span class="site-back-text">VortexFlow Media</span></a>
+</div>
 <div class="bg-grid" aria-hidden="true"></div>
 <div class="bg-glow" aria-hidden="true"></div>
 
@@ -30,11 +33,12 @@
     <div class="hero">
       <div class="kicker">TRADITIONAL STREET GAME</div>
       <h1>HAND<br>CRICKET</h1>
-      <p class="lede">Batsman and bowler each flash a number from <b>1 to 10</b>. Different numbers mean the batsman scores their own number. Same number means <b class="out-word">OUT</b>. Two innings, chase the target.</p>
+      <p class="lede">Both sides show a number from <b>1 to 10</b>. Different means the batter scores. Same means <b class="out-word">OUT</b>.</p>
       <div class="hero-actions">
         <button id="btnStart" class="btn primary big">START GAME</button>
         <button id="btnHow" class="btn ghost">HOW A BALL WORKS</button>
       </div>
+      <div class="dev-credit">Developed by VortexFlow Media</div>
       <div id="howStrip" class="how-strip hidden">
         <div class="how-card"><span>YOU 07</span><em>vs</em><span>CPU 03</span><b>+7 RUNS</b></div>
         <div class="how-card"><span>YOU 04</span><em>vs</em><span>CPU 09</span><b>+4 RUNS</b></div>
@@ -221,15 +225,16 @@
 </main>
 
 <footer class="brand-foot" aria-label="Site credit">
-  <p>Powered by <a href="https://www.vortexflowmedia.site" target="_blank" rel="noopener noreferrer">VortexFlow Media</a></p>
+  <p class="foot-main">Powered by <span class="red-word">Red</span> · <a href="https://www.vortexflowmedia.site" target="_blank" rel="noopener noreferrer">VortexFlow Media</a></p>
+  <p class="foot-dev">Developed by <u>Srivastav Sai</u></p>
 </footer>
 
 <script src="js/input-provider.js"></script>
 <script src="js/ai-engine.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>
-<script src="js/hand-gestures.js?v=3.6.1"></script>
-<script src="js/camera-input.js?v=3.6.1"></script>
+<script src="js/hand-gestures.js"></script>
+<script src="js/camera-input.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

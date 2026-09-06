@@ -1,4 +1,4 @@
-/* Adaptive AI prediction engine. JS mirror of backend/ai_engine.py.
+/* Adaptive AI prediction engine. JS mirror of the Python AI.
  * Same signals, same weights, same fairness contract: input is COMPLETED
  * history only. There is no parameter for the player's current/pending
  * move. Cheating is impossible by construction.

@@ -1,9 +1,8 @@
-/* App orchestrator: screens + state machine + providers + (optional) backend.
+/* App orchestrator: screens + state machine + providers.
  *
- * Intended flow (Prototype 2, spec §19 / §24):
+ * Intended flow:
  *   PREVIOUS HISTORY -> AI ANALYSIS -> AI MOVE LOCKED -> PLAYER MOVE INPUT
  *   -> REVEAL BOTH -> RESOLVE -> UPDATE SCORE -> APPEND TO HISTORY -> NEXT
- * V3 swaps PrototypeInputProvider for a camera provider only.
  */
 'use strict';
 
@@ -12,10 +11,10 @@
   const GameEngine = window.HCGameEngine;
 
   const engine = new GameEngine(Math.random);
-  const provider = new window.PrototypeInputProvider(); // <-- V3: replace with camera provider
+  const provider = new window.ButtonInputProvider();
   // Keyboard is ANOTHER provider feeding the SAME sink: mouse click, touch
-  // tap and digit key all converge on provider.provide(). One common
-  // player-input API, one set of locks, zero divergent game logic.
+  // tap and digit key all converge on provider.provide(). One shared
+  // input, one set of locks, zero divergent game logic.
   const keyboardInput = new window.KeyboardInputProvider(provider, {
     isAccepting: () => activeScreen() === 'screen-game' && acceptingInput,
     onAccepted: (move) => flashPadButton(move),
@@ -45,31 +44,31 @@
     setTimeout(() => b.classList.remove('kbd-hit'), 300);
   }
 
-  // ---------- optional Python backend sync (non-blocking, no visible UI) ----------
+  // ---------- optional server sync (non-blocking, no visible UI) ----------
   let sessionId = null;
-  async function backendNew() {
+  async function serverNew() {
     try {
       const r = await fetch('/api/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-      if (!r.ok) throw new Error('no backend');
+      if (!r.ok) throw new Error('no server');
       const j = await r.json();
       sessionId = j.session_id;
-    } catch { /* local engine remains authoritative, nothing shown */ }
+    } catch { /* local rules remain authoritative, nothing shown */ }
   }
-  async function backendDifficulty(d) {
+  async function serverDifficulty(d) {
     if (!sessionId) return;
     try {
       await fetch('/api/difficulty', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, difficulty: d }),
       });
-    } catch { /* local engine remains authoritative */ }
+    } catch { /* local rules remain authoritative */ }
   }
 
   // ---------- rules -> difficulty -> toss ----------
   function gotoDifficulty() {
     engine.reset();
     engine.startDifficultySelect();
-    backendNew(); // fresh server session per match (best-effort; local engine is authoritative)
+    serverNew(); // fresh server session per match (best-effort; local rules are authoritative)
     diffOpen = true;
     showScreen('screen-difficulty');
     document.querySelectorAll('.diff-card').forEach((c) => {
@@ -84,7 +83,7 @@
     document.querySelectorAll('.diff-card').forEach((c) => {
       c.classList.toggle('selected', c.dataset.difficulty === d);
     });
-    backendDifficulty(d);
+    serverDifficulty(d);
     setTimeout(gotoToss, 350);
   }
 
@@ -111,7 +110,7 @@
     void coin.offsetWidth;
     $('coinLabel').textContent = `YOU CALLED ${call.toUpperCase()}`;
     coin.classList.add('flipping');
-    // mirror to backend if present (fire-and-forget)
+    // mirror to server if present (fire-and-forget)
     await new Promise((r) => setTimeout(r, 1050));
     engine.doToss(call);
     const s = engine.state;
@@ -230,7 +229,7 @@
     if (engine.state.phase === 'MATCH_RESULT' || engine.state.phase === 'INNINGS_BREAK') return;
     acceptingInput = true;
     try { if (window.HCCamera) window.HCCamera.setInputEnabled(true); } catch (e) {}
-    // FAIRNESS (§1, §19): the AI analyzes COMPLETED history and LOCKS its
+    // FAIRNESS: the AI analyzes COMPLETED history and LOCKS its
     // move BEFORE the player's input exists. provider.arm() only resolves
     // afterwards, so the AI structurally cannot see the current move.
     try {
@@ -324,6 +323,7 @@
     try { if (window.HCCamera) window.HCCamera.stop(); } catch (e) {}
     var camPanel = $('camPanel');
     if (camPanel) camPanel.classList.add('hidden');
+    try { document.getElementById('screen-game').classList.remove('cam-on'); } catch (e) {}
     var camBtn = $('btnCamera');
     if (camBtn) camBtn.classList.remove('hidden');
     provider.cancel();
@@ -334,12 +334,13 @@
     showScreen('screen-rules');
   }
 
-  // ---------- Prototype 3 camera mode (opt in only, P2 stays fallback) ----------
+  // ---------- Camera mode (opt in only, pad stays as fallback) ----------
   function openCamera() {
     var panel = $('camPanel');
     if (panel) panel.classList.remove('hidden');
     var btn = $('btnCamera');
     if (btn) btn.classList.add('hidden');
+    try { document.getElementById('screen-game').classList.add('cam-on'); } catch (e) {}
     if (panel && panel.scrollIntoView) {
       try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     }
@@ -363,6 +364,7 @@
     if (panel) panel.classList.add('hidden');
     var btn = $('btnCamera');
     if (btn) btn.classList.remove('hidden');
+    try { document.getElementById('screen-game').classList.remove('cam-on'); } catch (e) {}
   }
 
   // ---------- wire up ----------
@@ -370,7 +372,7 @@
     renderRulebook();
     renderPad(provider, null);
     showScreen('screen-rules');
-    backendNew();
+    serverNew();
 
     $('btnStart').addEventListener('click', gotoDifficulty);
     $('btnStart2').addEventListener('click', gotoDifficulty);

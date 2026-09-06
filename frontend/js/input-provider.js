@@ -1,20 +1,20 @@
-/* Input-provider abstraction (spec §9 / §20 / §27).
+/* Input providers.
  *
  * Concept:  PLAYER SOURCE -> number 0-10 -> GAME ENGINE -> UI
  *
- *  - PrototypeInputProvider: reads the tapped pad button (mouse + touch).
+ *  - ButtonInputProvider: reads the tapped pad button (mouse + touch).
  *  - KeyboardInputProvider:  reads physical digit keys, forwards into the
- *                             SAME shared sink (common player-input API).
+ *                             SAME shared sink.
  *                             Physical 0 still means 10; 0 is played by
  *                             tapping the fist pad or showing a fist.
- *  - FutureCameraInputProvider: will read MediaPipe/OpenCV (version 2).
+ *  - FutureCameraInputProvider: reads hand gestures from the camera.
  * All satisfy the same interface and produce the same integer 0-10.
  * the engine never knows which source the move came from.
  *
  * Diagram:
  *   MouseInput / TouchInput (pad click) ─┐
  *   KeyboardInput (digit key) ───────────┼─> COMMON SINK (provide/arm) -> ENGINE
- *   FutureCameraInput ───────────────────┘
+ *   CameraInput ─────────────────────────┘
  */
 'use strict';
 
@@ -25,21 +25,21 @@ class InputProvider {
   get name() { return 'base'; }
 }
 
-/** V1. Click or tap the 0 to 10 pad. Resolves once per armed gesture. */
-class PrototypeInputProvider extends InputProvider {
+/** Tap the 0 to 10 pad. Resolves once per armed gesture. */
+class ButtonInputProvider extends InputProvider {
   constructor() {
     super();
     this._waiter = null;
     this._lastMove = null;
   }
-  get name() { return 'prototype-buttons'; }
+  get name() { return 'buttons'; }
 
   /** Arm for exactly one move; resolves with the tapped value. */
   arm() {
     return new Promise((resolve) => { this._waiter = resolve; });
   }
 
-  /** Called by the pad buttons. Also usable as getPlayerMove() directly. */
+  /** Called by the pad buttons. */
   provide(move) {
     const v = Number(move);
     if (!Number.isInteger(v) || v < 0 || v > 10) return;
@@ -65,7 +65,7 @@ class PrototypeInputProvider extends InputProvider {
   }
 }
 
-/** Keyboard number entry. Another Input Provider, not a parallel game path.
+/** Keyboard number entry. Another input provider, not a parallel game path.
  *
  * Physical digits map to moves (there is no single key for 10, so 0 = 10):
  *   '1'-'9' -> 1-9,  '0' -> 10,  anything else -> null (silently ignored).
@@ -99,7 +99,7 @@ class KeyboardInputProvider extends InputProvider {
     return null;
   }
 
-  /** Common player-input API passthroughs (same sink the buttons use). */
+  /** Shared input passthroughs (same sink the buttons use). */
   provide(move) { this.sink.provide(move); }
   arm() { return this.sink.arm(); }
   cancel() { return this.sink.cancel(); }
@@ -132,7 +132,7 @@ class KeyboardInputProvider extends InputProvider {
   }
 }
 
-/** V2 placeholder. Webcam + hand detection plugs in here.
+/** Camera input placeholder.
  *  Contract: return an integer 0-10, never an SVG/emoji/string.
  *  The engine must not change when this provider goes live. */
 class FutureCameraInputProvider extends InputProvider {
@@ -140,20 +140,19 @@ class FutureCameraInputProvider extends InputProvider {
     super();
     this.ready = false;
   }
-  get name() { return 'camera-v2-stub'; }
+  get name() { return 'camera-stub'; }
 
   async init() {
-    // V2: await navigator.mediaDevices.getUserMedia(...); load MediaPipe; ...
     this.ready = false;
     throw new Error(
-      'FutureCameraInputProvider is a V2 stub. Wire MediaPipe/OpenCV here; ' +
-      'implement getPlayerMoveFromCamera() -> int 0-10.'
+      'Camera input is not configured here. ' +
+      'Wire hand tracking here; implement camera move reading -> int 0-10.'
     );
   }
 
-  // V2 entry point (name kept stable for the cutover):
+  // Camera entry point:
   async getPlayerMoveFromCamera() {
-    throw new Error('V2 not implemented yet. Use PrototypeInputProvider.');
+    throw new Error('Camera input not ready. Use the pad buttons.');
   }
 
   async getPlayerMove() {
@@ -161,8 +160,8 @@ class FutureCameraInputProvider extends InputProvider {
   }
 }
 
-// Browser global export (no bundler in prototype).
+// Browser global export (no bundler).
 window.InputProvider = InputProvider;
-window.PrototypeInputProvider = PrototypeInputProvider;
+window.ButtonInputProvider = ButtonInputProvider;
 window.KeyboardInputProvider = KeyboardInputProvider;
 window.FutureCameraInputProvider = FutureCameraInputProvider;

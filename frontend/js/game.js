@@ -1,9 +1,9 @@
-/* Pure JS game engine. Mirrors backend/game_engine.py exactly.
+/* Pure JS game engine. Mirrors the Python rules exactly.
  * Knows nothing about DOM / SVG / webcam. Only ints, scores, phases.
  * The Python engine is authoritative for API play; this copy allows
  * instant offline play. Logic is kept in lockstep by shared tests.
  *
- * Prototype 2: the AI opponent lives in ai-engine.js (HCAI). The engine
+ * The AI opponent lives in ai-engine.js (HCAI). The engine
  * only passes COMPLETED history to it. Never the pending player move. */
 'use strict';
 
@@ -26,7 +26,7 @@ function validateMove(v) {
   return v;
 }
 
-/** Legacy uniform-random pick (Prototype 1 behaviour, kept for compat). */
+/** Legacy uniform-random pick (kept for compat). */
 function computerPick(rng = Math.random) {
   return 1 + Math.floor(rng() * 10);
 }
