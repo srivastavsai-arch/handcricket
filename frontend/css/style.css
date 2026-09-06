@@ -48,6 +48,8 @@ img,svg{max-width:100%}
 /* Developer credit below the main introductory content. */
 .dev-credit{margin:4px auto 0;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);text-align:center}
 .powered-credit{margin:2px auto 0;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);text-align:center}
+.dev-credit a.credit-link,.powered-credit a.credit-link{color:var(--muted);font-weight:400;letter-spacing:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.dev-credit a.credit-link:hover,.powered-credit a.credit-link:hover{color:var(--txt)}
 /* Touch-first controls. Fast tap, no highlight, no selection. */
 button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
   touch-action:manipulation}
@@ -251,7 +253,8 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
 .brand-foot .foot-dev{margin-top:2px;font-size:11px;letter-spacing:1.5px;color:var(--muted)}
 .brand-foot .foot-powered{margin:0;font-size:11px;letter-spacing:1.5px;color:var(--muted)}
 .brand-foot .foot-dev u{text-underline-offset:3px;color:var(--muted)}
-.brand-foot .foot-dev a.dev-link{display:inline;padding:0;border-bottom:none;font-weight:400;letter-spacing:inherit;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.brand-foot a.dev-link{display:inline;padding:0;border-bottom:none;font-weight:400;letter-spacing:inherit;color:var(--muted);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.brand-foot a.dev-link:hover{color:var(--txt)}
 /* difficulty select. Names only, identity kept via tier colour. */
 .panel.wide{max-width:920px;margin:30px auto}
 .diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0 10px}
