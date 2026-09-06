@@ -246,6 +246,7 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
 .brand-foot .red-word{color:var(--red);font-weight:800;letter-spacing:2px}
 .brand-foot .foot-dev{margin-top:2px;font-size:11px;letter-spacing:1.5px;color:var(--muted)}
 .brand-foot .foot-dev u{text-underline-offset:3px;color:var(--muted)}
+.brand-foot .foot-dev a.dev-link{display:inline;padding:0;border-bottom:none;font-weight:400;letter-spacing:inherit;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
 /* difficulty select. Names only, identity kept via tier colour. */
 .panel.wide{max-width:920px;margin:30px auto}
 .diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0 10px}
