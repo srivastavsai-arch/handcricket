@@ -45,28 +45,42 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // Cached element refs + last-written values. Camera results arrive at
+  // high frequency; skipping redundant DOM writes keeps the main thread
+  // free for MediaPipe, which is what makes mobile feel responsive.
+  var els = {};
+  function el(id) {
+    if (!els[id]) els[id] = $(id);
+    return els[id];
+  }
+  var lastText = {};
   function setLine(id, text) {
-    var el = $(id);
-    if (el) el.textContent = text;
+    if (lastText[id] === text) return;
+    lastText[id] = text;
+    var node = el(id);
+    if (node) node.textContent = text;
   }
 
   function showError(text) {
-    var el = $('camError');
-    if (!el) return;
+    var node = el('camError');
+    if (!node) return;
     if (!text) {
-      el.classList.add('hidden');
-      el.textContent = '';
+      node.classList.add('hidden');
+      node.textContent = '';
     } else {
-      el.textContent = text;
-      el.classList.remove('hidden');
+      node.textContent = text;
+      node.classList.remove('hidden');
     }
   }
 
+  var lastPct = -1;
   function setProgress(done, need) {
-    var fill = $('camConfirmFill');
+    var fill = el('camConfirmFill');
     if (!fill) return;
     var pct = 0;
     if (need > 0) pct = Math.max(0, Math.min(100, Math.round((done / need) * 100)));
+    if (pct === lastPct) return;
+    lastPct = pct;
     fill.style.width = pct + '%';
   }
 
@@ -84,12 +98,36 @@
     return loadHandsScript._p;
   }
 
+  // Skeleton overlay mapped with contain-fit math so it always lines up
+  // with the visible (mirrored, letterboxed) preview. The preview uses
+  // object-fit: contain, so the whole hand stays visible instead of being
+  // cropped; landmarks are mapped into the same fitted rect the browser
+  // displays, using the live video frame size (never a stale size).
+  var viewBox = { vw: 640, vh: 480, cw: 0, ch: 0, ctx: null };
   function drawSkeleton(canvas, landmarks) {
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var w = canvas.width, h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
+    var video = el('camVideo');
+    if (!canvas) canvas = el('camOverlay');
+    if (!canvas || !video) return;
+    var vw = video.videoWidth || viewBox.vw;
+    var vh = video.videoHeight || viewBox.vh;
+    var cw = canvas.clientWidth || canvas.width || vw;
+    var ch = canvas.clientHeight || canvas.height || vh;
+    if (viewBox.ctx === null || viewBox.cw !== cw || viewBox.ch !== ch) {
+      canvas.width = Math.max(1, Math.round(cw));
+      canvas.height = Math.max(1, Math.round(ch));
+      viewBox.cw = cw;
+      viewBox.ch = ch;
+      viewBox.ctx = canvas.getContext('2d');
+    }
+    var ctx = viewBox.ctx;
+    ctx.clearRect(0, 0, viewBox.cw, viewBox.ch);
     if (!landmarks) return;
+    var scale = Math.min(viewBox.cw / vw, viewBox.ch / vh);
+    var ox = (viewBox.cw - vw * scale) / 2;
+    var oy = (viewBox.ch - vh * scale) / 2;
+    function map(p) {
+      return [(1 - p.x) * vw * scale + ox, p.y * vh * scale];
+    }
     var links = [
       [0, 1], [1, 2], [2, 3], [3, 4],
       [0, 5], [5, 6], [6, 7], [7, 8],
@@ -97,31 +135,39 @@
       [9, 13], [13, 14], [14, 15], [15, 16],
       [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
     ];
-    ctx.lineWidth = Math.max(2, w / 160);
+    ctx.lineWidth = Math.max(2, Math.min(viewBox.cw, viewBox.ch) / 160);
     ctx.strokeStyle = 'rgba(125,249,255,.85)';
     ctx.fillStyle = 'rgba(125,249,255,.95)';
     ctx.beginPath();
     links.forEach(function (lk) {
       var a = landmarks[lk[0]], b = landmarks[lk[1]];
       if (!a || !b) return;
-      ctx.moveTo((1 - a.x) * w, a.y * h);
-      ctx.lineTo((1 - b.x) * w, b.y * h);
+      var pa = map(a), pb = map(b);
+      ctx.moveTo(pa[0], pa[1]);
+      ctx.lineTo(pb[0], pb[1]);
     });
     ctx.stroke();
+    var dot = Math.max(2, Math.min(viewBox.cw, viewBox.ch) / 120);
     landmarks.forEach(function (p) {
       if (!p) return;
+      var pp = map(p);
       ctx.beginPath();
-      ctx.arc((1 - p.x) * w, p.y * h, Math.max(2, w / 120), 0, Math.PI * 2);
+      ctx.arc(pp[0], pp[1], dot, 0, Math.PI * 2);
       ctx.fill();
     });
   }
 
   function fitCanvas() {
-    var video = $('camVideo'), canvas = $('camOverlay');
-    if (!video || !canvas) return;
-    var w = video.videoWidth || 640, h = video.videoHeight || 480;
-    if (canvas.width !== w) canvas.width = w;
-    if (canvas.height !== h) canvas.height = h;
+    // Cheap sync point: keep the live frame size for the overlay mapper.
+    // Canvas backing store is sized lazily inside drawSkeleton from the
+    // displayed box, so this never forces layout or reallocates per frame.
+    var video = el('camVideo');
+    if (!video) return;
+    var w = video.videoWidth || 0, h = video.videoHeight || 0;
+    if (w > 0 && h > 0 && (w !== viewBox.vw || h !== viewBox.vh)) {
+      viewBox.vw = w;
+      viewBox.vh = h;
+    }
   }
 
   function resetBuffer() {
@@ -133,15 +179,27 @@
     if (state.buffer.length > 8) state.buffer.shift();
   }
 
+  // A gesture is stable when the latest reading is a real classification
+  // backed by NEED_STABLE matching detections. One noisy (null) frame in
+  // the window is skipped instead of resetting the count — mobile depth
+  // data glitches single frames, and that glitch must not cost the whole
+  // confirmation. A *different* gesture still breaks stability, and the
+  // trigger always uses the latest valid landmarks.
   function stableGesture() {
     if (state.buffer.length < NEED_STABLE) return null;
-    var tail = state.buffer.slice(-NEED_STABLE);
-    var first = tail[0];
-    if (first === null || first === undefined) return null;
-    for (var i = 1; i < tail.length; i++) {
-      if (tail[i] !== first) return null;
+    var cand = null, count = 0, skips = 0;
+    for (var i = state.buffer.length - 1; i >= 0; i--) {
+      var v = state.buffer[i];
+      if (v === null || v === undefined) {
+        if (count > 0 && skips < 1) { skips++; continue; }
+        return null;
+      }
+      if (cand === null) cand = v;
+      if (v !== cand) return null;
+      count++;
+      if (count >= NEED_STABLE) return cand;
     }
-    return first;
+    return null;
   }
 
   function currentStreak() {
@@ -173,7 +231,7 @@
       // here, so every pose is ignored until it leaves. No exceptions,
       // not even a different number.
       if (state.phase === 'waiting-release') {
-        drawSkeleton($('camOverlay'), landmarks);
+        drawSkeleton(null, landmarks);
         setLine('camHandStatus', 'Hand found');
         setLine('camGestureStatus', 'Seen: •');
         setLine('camConfirmStatus', 'Remove your hand');
@@ -182,7 +240,7 @@
       }
       // Strict lock: preview keeps drawing, but nothing is read.
       if (state.suspended) {
-        drawSkeleton($('camOverlay'), landmarks);
+        drawSkeleton(null, landmarks);
         setLine('camHandStatus', 'Show your hand');
         setLine('camGestureStatus', 'Seen: •');
         return;
@@ -199,7 +257,7 @@
       } else {
         setLine('camGestureStatus', 'Seen: •');
       }
-      drawSkeleton($('camOverlay'), landmarks);
+      drawSkeleton(null, landmarks);
 
       var stable = stableGesture();
       var streak = currentStreak();
@@ -236,7 +294,7 @@
       }
     } else {
       pushReading(null);
-      drawSkeleton($('camOverlay'), null);
+      drawSkeleton(null, null);
       setProgress(0, NEED_STABLE);
       if (state.phase === 'waiting-release') {
         // Tolerant release: out of frame or out of reliable sight both
@@ -254,7 +312,7 @@
         state.phase = 'ready';
         setLine('camHandStatus', 'Show your hand');
         setLine('camGestureStatus', 'Seen: •');
-        var err = $('camError');
+        var err = el('camError');
         var hasErr = err && !err.classList.contains('hidden');
         if (!hasErr) setLine('camConfirmStatus', 'Ready');
       }
@@ -263,7 +321,7 @@
 
   function loop() {
     if (!state.active) return;
-    var video = $('camVideo');
+    var video = el('camVideo');
     if (video && state.hands && video.readyState >= 2 && !state.sending) {
       state.sending = true;
       try {
@@ -319,6 +377,10 @@
     state.sink = null;
     state.isAccepting = null;
     state.onConfirm = null;
+    els = {};
+    lastText = {};
+    lastPct = -1;
+    viewBox = { vw: 640, vh: 480, cw: 0, ch: 0, ctx: null };
   }
 
   function start(opts) {
@@ -345,15 +407,16 @@
     return loadHandsScript().then(function () {
       if (!window.Hands) throw new Error('hand library missing');
       return navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
       });
     }).then(function (stream) {
       state.stream = stream;
-      var video = $('camVideo');
+      var video = el('camVideo');
       if (!video) throw new Error('no preview');
       video.srcObject = stream;
       video.muted = true;
+      try { video.playsInline = true; } catch (e) {}
       return video.play().then(function () {
         fitCanvas();
         var hands = new window.Hands({

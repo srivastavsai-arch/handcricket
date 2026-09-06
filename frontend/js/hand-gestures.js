@@ -24,8 +24,10 @@
  * - Joint angles use dot products, which are independent of hand rotation,
  *   tilt and position. No comparison of raw x or y coordinates is used,
  *   so left and right hands behave the same.
- * - A finger counts as open only when it is BOTH fairly straight AND
- *   reasonably extended. Either signal alone is not enough.
+ * - A finger counts as open when it is clearly extended, judged by
+ *   joint angles AND palm-normalized reach AND bone-length-normalized
+ *   straightness. Any one strong signal is enough, so natural tilt, small
+ *   bends and hand rotation never block a deliberately extended finger.
  * - The thumb counts as open only when it sticks OUT sideways from the
  *   hand axis. A thumb wrapped across a fist can look straight, so
  *   straightness alone never opens it.
@@ -59,25 +61,39 @@
     return Math.acos(cos) * (180 / Math.PI);
   }
 
-  // Straightness of a long finger from its two mid joints.
+  // Straightness of a long finger from its two mid joints, plus a
+  // bone-length-normalized reach. `straight` is tip-to-knuckle distance
+  // divided by the summed phalanx lengths: 1.0 = perfectly straight, and
+  // it is unaffected by tilt/rotation/scale because both sides scale and
+  // rotate together. `ext` is the same reach divided by palm size, so it
+  // is stable when the hand moves closer or farther.
   function fingerShape(lm, mcp, pip, dip, tip, palm) {
     const A = pt(lm, mcp), B = pt(lm, pip), C = pt(lm, dip), D = pt(lm, tip);
     const a1 = angleDeg(A, B, C);
     const a2 = angleDeg(B, C, D);
     const avg = (a1 + a2) / 2;
-    const ext = dist(D, A) / palm;
-    return { a1, a2, avg, ext };
+    const reach = dist(D, A);
+    const bones = dist(A, B) + dist(B, C) + dist(C, D);
+    const straight = bones > 1e-9 ? reach / bones : 1;
+    const ext = reach / palm;
+    return { a1, a2, avg, ext, straight };
   }
 
+  // A finger is OPEN when it is clearly extended. Three independent,
+  // rotation-invariant signals; any one is enough so natural tilt or a
+  // small bend never blocks a deliberately extended finger.
   function fingerOpen(shape) {
     if (shape.ext >= 0.95) return true;
-    if (shape.avg >= 150 && shape.ext >= 0.62) return true;
+    if (shape.straight >= 0.86 && shape.ext >= 0.55) return true;
+    if (shape.avg >= 135 && shape.ext >= 0.60) return true;
+    if (shape.avg >= 150 && shape.ext >= 0.55) return true;
     return false;
   }
 
   function fingerClosed(shape) {
     if (shape.ext <= 0.50) return true;
-    if (shape.avg <= 105 && shape.ext <= 0.72) return true;
+    if (shape.straight <= 0.70 && shape.ext <= 0.72) return true;
+    if (shape.avg <= 105 && shape.ext <= 0.75) return true;
     return false;
   }
 

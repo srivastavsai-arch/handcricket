@@ -212,7 +212,7 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
 .cam-body{display:grid;grid-template-columns:1fr;gap:10px;align-items:start;min-width:0}
 .cam-video-wrap{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;
   background:rgba(6,11,20,.9);aspect-ratio:4/3;width:min(100%,400px,calc(38vh * 1.3333));margin:0 auto;min-width:0}
-.cam-video-wrap video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
+.cam-video-wrap video{width:100%;height:100%;object-fit:contain;display:block;transform:scaleX(-1);background:rgba(6,11,20,.9)}
 .cam-video-wrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .cam-status{display:grid;gap:6px;min-width:0;max-width:560px;width:100%;margin:0 auto;text-align:center}
 .cam-line{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;color:var(--txt);overflow-wrap:break-word}
@@ -354,7 +354,7 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
   .cam-panel{padding:10px 8px;margin:10px 0 2px}
   .cam-top{gap:8px;margin-bottom:8px}
   .cam-video-wrap{width:min(100%,340px,calc(32vh * 1.3333));aspect-ratio:4/3}
-  .cam-video-wrap video{object-fit:cover}
+  .cam-video-wrap video{object-fit:contain}
   .cam-status{gap:5px;max-width:100%}
   .cam-line{font-size:11px}
   .cam-line.big{font-size:16px}
@@ -402,7 +402,7 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
     aspect-ratio:4/3;min-height:0}
   #screen-game.cam-on .cam-video-wrap video,
   #screen-game:has(#camPanel:not(.hidden)) .cam-video-wrap video{
-    width:100%;height:100%;object-fit:cover}
+    width:100%;height:100%;object-fit:contain}
   #screen-game.cam-on .cam-status,
   #screen-game:has(#camPanel:not(.hidden)) .cam-status{max-width:100%;gap:5px;margin-top:8px}
   #screen-game.cam-on .history.below-pad,
