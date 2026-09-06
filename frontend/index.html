@@ -179,7 +179,12 @@
     </div>
     <div class="pad-head">
       <h3 id="promptLine">Choose your number</h3>
-      <button id="btnCamera" class="btn ghost small cam-toggle" type="button">📷 Play with Camera</button>
+      <button id="btnCamera" class="cam-toggle cam-premium" type="button" aria-label="Play with camera using hand gestures">
+        <span class="cam-premium-sheen" aria-hidden="true"></span>
+        <svg class="cam-ic cam-ic-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 7 10 4.5h4L15.5 7"/><rect x="2.5" y="7" width="19" height="13" rx="3"/><circle cx="12" cy="13.2" r="3.4"/><circle cx="12" cy="13.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.2" cy="10.2" r="0.9" fill="currentColor" stroke="none"/></svg>
+        <span class="cam-premium-text">Play with Camera<small>Use your hand gestures to play</small></span>
+        <svg class="cam-ic cam-ic-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.6"/><line x1="10.5" y1="5.2" x2="13.5" y2="5.2"/><rect x="9.4" y="8" width="5.2" height="8" rx="1.2"/><circle cx="12" cy="18.4" r="0.9" fill="currentColor" stroke="none"/></svg>
+      </button>
     </div>
     <div id="movePad" class="move-pad"></div>
     <aside class="history below-pad">
@@ -225,6 +230,7 @@
 <footer class="brand-foot" aria-label="Site credit">
   <p class="foot-powered">Powered by <a class="dev-link" href="https://www.vortexflowmedia.site" target="_blank" rel="noopener noreferrer">VortexFlow Media</a></p>
   <p class="foot-dev">Developed by <a class="dev-link" href="https://github.com/srivastavsai-arch" target="_blank" rel="noopener noreferrer">Srivastav Sai</a></p>
+  <p class="foot-privacy"><a class="privacy-link" href="privacy.html">Privacy Policy</a></p>
 </footer>
 
 <script src="js/input-provider.js"></script>
