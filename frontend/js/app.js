@@ -378,6 +378,8 @@
     $('btnStart2').addEventListener('click', gotoDifficulty);
     $('btnHow').addEventListener('click', () => $('howStrip').classList.toggle('hidden'));
     document.querySelectorAll('[data-nav="rules"]').forEach((b) => b.addEventListener('click', fullReset));
+    var brandHome = $('brandHome');
+    if (brandHome) brandHome.addEventListener('click', fullReset);
     document.querySelectorAll('.btn.toss').forEach((b) => b.addEventListener('click', () => callToss(b.dataset.call)));
     $('btnBat').addEventListener('click', () => chooseSide('bat'));
     $('btnBowl').addEventListener('click', () => chooseSide('bowl'));

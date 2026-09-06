@@ -46,7 +46,8 @@ img,svg{max-width:100%}
 /* Hero subtext kept to roughly two lines. Balanced wrapping. */
 .lede{max-width:540px;text-wrap:balance}
 /* Developer credit below the main introductory content. */
-.dev-credit{margin:4px auto 0;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted)}
+.dev-credit{margin:4px auto 0;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);text-align:center}
+.powered-credit{margin:2px auto 0;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);text-align:center}
 /* Touch-first controls. Fast tap, no highlight, no selection. */
 button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
   touch-action:manipulation}
@@ -59,6 +60,9 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
 .topbar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;
   padding:12px 22px;border-bottom:1px solid var(--line);background:rgba(6,11,20,.82);backdrop-filter:blur(10px)}
 .brand{display:flex;gap:12px;align-items:center}
+.brand-home{background:none;border:none;padding:0;margin:0;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:8px}
+.brand-home:hover .brand-title{color:var(--cyan)}
+.brand-home:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .brand-mark{width:42px;height:42px;display:grid;place-items:center;font-family:var(--mono);font-weight:800;
   border:1px solid var(--cyan);color:var(--cyan);border-radius:9px;background:rgba(125,249,255,.07);
   box-shadow:0 0 18px rgba(125,249,255,.25),inset 0 0 12px rgba(125,249,255,.12)}
@@ -245,6 +249,7 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
 .brand-foot a:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;border-radius:4px}
 .brand-foot .red-word{color:var(--red);font-weight:800;letter-spacing:2px}
 .brand-foot .foot-dev{margin-top:2px;font-size:11px;letter-spacing:1.5px;color:var(--muted)}
+.brand-foot .foot-powered{margin:0;font-size:11px;letter-spacing:1.5px;color:var(--muted)}
 .brand-foot .foot-dev u{text-underline-offset:3px;color:var(--muted)}
 .brand-foot .foot-dev a.dev-link{display:inline;padding:0;border-bottom:none;font-weight:400;letter-spacing:inherit;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
 /* difficulty select. Names only, identity kept via tier colour. */
@@ -293,8 +298,11 @@ button,a,.pad-btn,.diff-card,.g-card,.move-card,.site-back{
   .kicker{letter-spacing:2px}
   .brand-foot p{font-size:11px}
   .brand-foot .foot-dev{font-size:10px}
+  .brand-foot .foot-powered{font-size:10px}
   .brand-foot a{padding:10px 8px}
+  .brand-foot .foot-dev a.dev-link{padding:0}
   .dev-credit{font-size:10px}
+  .powered-credit{font-size:10px}
   .lede{font-size:14.5px;line-height:1.55}
   /* compact difficulty: tight but tappable */
   .panel.wide{margin:20px auto}
