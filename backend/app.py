@@ -34,11 +34,18 @@ def _content_security_policy() -> str:
     #   self                  — game scripts, styles, gesture SVGs, /api
     #   cdn.jsdelivr.net       — MediaPipe Hands loader + model files
     #   fonts.googleapis.com  — stylesheets | fonts.gstatic.com — font files
-    # blob:/data: cover the camera preview overlay and font loading.
+    #   blob:/data: cover the camera preview overlay and font loading.
     # worker-src blob: is included defensively for the tracking runtime.
+    # 'wasm-unsafe-eval' is REQUIRED in script-src: the MediaPipe Hands
+    # tracker runs entirely in WebAssembly, and Chrome/Edge refuse to
+    # compile/instantiate WASM without it. Without this token the camera
+    # preview still works but no landmarks are ever returned, so the
+    # exoskeleton and gesture detection silently never appear. Unlike
+    # 'unsafe-eval' it does NOT allow eval()/new Function()/inline
+    # scripts — script protections stay intact.
     return (
         "default-src 'self'; "
-        "script-src 'self' https://cdn.jsdelivr.net; "
+        "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; "
         "style-src 'self' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com data:; "
         "img-src 'self' data: blob:; "
