@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HAND CRICKET</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow" aria-hidden="true"></div>
+
+<header class="topbar">
+  <button id="brandHome" class="brand brand-home" type="button" aria-label="Go to home page">
+    <div class="brand-mark">HC</div>
+    <div>
+      <div class="brand-title">HAND CRICKET</div>
+      <div class="brand-sub">ADAPTIVE AI</div>
+    </div>
+  </button>
+  <div class="topbar-right">
+    <div class="phase-pill" id="phasePill">RULES</div>
+    <a class="report-btn" href="report.html" aria-label="Report an Issue" title="Report an Issue">ISSUE?</a>
+  </div>
+</header>
+
+<main class="shell">
+
+  <!-- ============ RULES ============ -->
+  <section id="screen-rules" class="screen active">
+    <div class="hero">
+      <div class="kicker">TRADITIONAL STREET GAME</div>
+      <h1>HAND<br>CRICKET</h1>
+      <p class="lede">Both sides show a number from <b>1 to 10</b>. Different means the batter scores. Same means <b class="out-word">OUT</b>.</p>
+      <div class="hero-actions">
+        <button id="btnStart" class="btn primary big">START GAME</button>
+        <button id="btnHow" class="btn ghost">HOW A BALL WORKS</button>
+      </div>
+      <div class="dev-credit">Developed by <a class="credit-link" href="https://github.com/srivastavsai-arch" target="_blank" rel="noopener noreferrer">Srivastav Sai</a></div>
+      <div class="powered-credit">Powered by <a class="credit-link" href="https://www.vortexflowmedia.site" target="_blank" rel="noopener noreferrer">VortexFlow Media</a></div>
+      <div id="howStrip" class="how-strip hidden">
+        <div class="how-card"><span>YOU 07</span><em>vs</em><span>CPU 03</span><b>+7 RUNS</b></div>
+        <div class="how-card"><span>YOU 04</span><em>vs</em><span>CPU 09</span><b>+4 RUNS</b></div>
+        <div class="how-card out"><span>YOU 05</span><em>vs</em><span>CPU 05</span><b>OUT</b></div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>FINGER GESTURE RULEBOOK</h2>
+      <p>These are the ten hand signals used in the game.</p>
+    </div>
+    <div id="rulebookGrid" class="rulebook"></div>
+
+    <div class="rules-foot">
+      <div class="rule-note"><b>OUT RULE</b><span>Score only ever increases by the <u>batsman's</u> number. Bowler's number can only get the batsman out.</span></div>
+      <div class="rule-note"><b>CHASE RULE</b><span>The second innings target is one more than the first innings score. Reaching it ends the match instantly.</span></div>
+    </div>
+    <button id="btnStart2" class="btn primary big wide">START GAME</button>
+  </section>
+
+  <!-- ============ DIFFICULTY ============ -->
+  <section id="screen-difficulty" class="screen">
+    <div class="panel wide center">
+      <div class="kicker">MATCH PROTOCOL</div>
+      <h2 class="big-h">SELECT DIFFICULTY</h2>
+      <p class="muted">The AI studies your completed balls only and adapts at the level you choose. One pick, locked for the whole match.</p>
+      <div class="diff-grid">
+        <button class="diff-card" data-difficulty="easy" type="button">
+          <div class="diff-tier">EASY</div>
+        </button>
+        <button class="diff-card" data-difficulty="medium" type="button">
+          <div class="diff-tier mid">MEDIUM</div>
+        </button>
+        <button class="diff-card" data-difficulty="hard" type="button">
+          <div class="diff-tier hard">HARD</div>
+        </button>
+      </div>
+      <p class="muted tiny">Still fallible by design. Difficulty stays locked for the whole match.</p>
+      <button class="btn link" data-nav="rules">BACK TO RULEBOOK</button>
+    </div>
+  </section>
+
+  <!-- ============ TOSS ============ -->
+  <section id="screen-toss" class="screen">
+    <div class="panel narrow center">
+      <div class="kicker">MATCH PROTOCOL</div>
+      <h2 class="big-h">TOSS</h2>
+      <p class="muted">Call it. The coin decides who bats first.</p>
+      <div class="coin-wrap">
+        <div id="coin" class="coin"><div class="coin-face front">H</div><div class="coin-face back">T</div></div>
+        <div id="coinLabel" class="coin-label">CALL HEADS OR TAILS</div>
+      </div>
+      <div class="row">
+        <button class="btn toss" data-call="heads">HEADS</button>
+        <button class="btn toss" data-call="tails">TAILS</button>
+      </div>
+      <button class="btn link" data-nav="rules">BACK TO RULEBOOK</button>
+    </div>
+  </section>
+
+  <!-- ============ TOSS RESULT / DECISION ============ -->
+  <section id="screen-decision" class="screen">
+    <div class="panel narrow center">
+      <div class="kicker">MATCH PROTOCOL</div>
+      <h2 id="tossTitle" class="big-h">YOU WON THE TOSS</h2>
+      <p id="tossDetail" class="muted">You called HEADS. Coin shows HEADS.</p>
+      <div id="playerDecision" class="decision-block">
+        <div class="kicker">WHAT DO YOU WANT TO DO?</div>
+        <div class="row">
+          <button id="btnBat" class="btn primary">BAT 🏏</button>
+          <button id="btnBowl" class="btn primary alt">BOWL ⚾</button>
+        </div>
+      </div>
+      <div id="computerDecision" class="decision-block hidden">
+        <div id="computerDecisionText" class="cpu-decision">COMPUTER CHOOSES TO BAT</div>
+        <button id="btnToMatch" class="btn primary big">ENTER THE ARENA</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="screen-game" class="screen">
+    <div class="score-strip">
+      <div class="score-card you">
+        <label>YOUR SCORE</label>
+        <div class="score-num" id="youScore">0<span class="wkts">/ 0</span></div>
+        <div class="role-tag" id="youRole">BATTING</div>
+      </div>
+      <div class="score-mid">
+        <div class="mid-row"><span>INNINGS</span><b id="mInnings">1</b></div>
+        <div class="mid-row target"><span>TARGET</span><b id="mTarget">•</b></div>
+        <div class="mid-row"><span>LAST BALL</span><b id="mLast">•</b></div>
+        <div class="mid-row"><span>BALL</span><b id="mBall">0</b></div>
+        <div class="mid-row ai"><span>AI DIFFICULTY</span><b id="mDiff">MEDIUM</b></div>
+      </div>
+      <div class="score-card cpu">
+        <label>COMPUTER SCORE</label>
+        <div class="score-num" id="cpuScore">0<span class="wkts">/ 0</span></div>
+        <div class="role-tag" id="cpuRole">BOWLING</div>
+      </div>
+    </div>
+
+    <div class="arena-wrap">
+      <div class="arena">
+        <div class="duel">
+          <div class="duelist">
+            <label>YOU <span id="youBatBowlTag">BAT</span></label>
+            <div class="move-card"><img id="youHand" src="assets/gestures/gesture-1.svg" alt="your move"/><span id="youNum">•</span></div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="duelist">
+            <label>COMPUTER <span id="cpuBatBowlTag">BOWL</span></label>
+            <div class="move-card cpu"><img id="cpuHand" src="assets/gestures/gesture-1.svg" alt="computer move"/><span id="cpuNum">•</span></div>
+          </div>
+        </div>
+        <div id="resultFlash" class="result-flash">AWAITING FIRST BALL</div>
+        <div id="aiStatus" class="ai-status">AI STANDBY</div>
+        <div id="chaseBar" class="chase hidden"><div id="chaseFill"></div><span id="chaseText"></span></div>
+      </div>
+    </div>
+
+    <div id="camPanel" class="cam-panel hidden">
+      <div class="cam-top">
+        <div class="cam-title">Camera Mode</div>
+        <button id="btnCamBack" class="btn ghost small" type="button">Back to Click Mode</button>
+      </div>
+      <div class="cam-body">
+        <div class="cam-video-wrap">
+          <video id="camVideo" playsinline muted></video>
+          <canvas id="camOverlay"></canvas>
+        </div>
+        <div class="cam-status">
+          <div id="camHandStatus" class="cam-line">Show your hand</div>
+          <div id="camGestureStatus" class="cam-line big">Seen: •</div>
+          <div class="cam-progress"><div id="camConfirmFill"></div></div>
+          <div id="camConfirmStatus" class="cam-line muted">Ready</div>
+          <div id="camError" class="cam-error hidden"></div>
+        </div>
+      </div>
+    </div>
+    <div class="pad-head">
+      <h3 id="promptLine">Choose your number</h3>
+      <button id="btnCamera" class="cam-toggle cam-premium" type="button" aria-label="Play with camera using hand gestures">
+        <span class="cam-premium-sheen" aria-hidden="true"></span>
+        <svg class="cam-ic cam-ic-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 7 10 4.5h4L15.5 7"/><rect x="2.5" y="7" width="19" height="13" rx="3"/><circle cx="12" cy="13.2" r="3.4"/><circle cx="12" cy="13.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.2" cy="10.2" r="0.9" fill="currentColor" stroke="none"/></svg>
+        <span class="cam-premium-text">Play with Camera<small>Use your hand gestures to play</small></span>
+        <svg class="cam-ic cam-ic-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.6"/><line x1="10.5" y1="5.2" x2="13.5" y2="5.2"/><rect x="9.4" y="8" width="5.2" height="8" rx="1.2"/><circle cx="12" cy="18.4" r="0.9" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+    <div id="movePad" class="move-pad"></div>
+    <aside class="history below-pad">
+      <h3>BALL HISTORY</h3>
+      <ol id="historyList"><li class="empty">No balls yet.</li></ol>
+    </aside>
+  </section>
+
+  <!-- ============ INNINGS BREAK ============ -->
+  <section id="screen-break" class="screen">
+    <div class="panel narrow center">
+      <div class="kicker">INNINGS BREAK</div>
+      <h2 class="big-h">INNINGS 1 COMPLETE</h2>
+      <div class="break-scores">
+        <div><label>YOU</label><b id="breakYou">0</b></div>
+        <div class="tgt"><label>TARGET</label><b id="breakTarget">•</b></div>
+        <div><label>COMPUTER</label><b id="breakCpu">0</b></div>
+      </div>
+      <p id="breakText" class="muted"></p>
+      <button id="btnInnings2" class="btn primary big">START CHASE</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section id="screen-result" class="screen">
+    <div class="panel narrow center">
+      <div class="kicker">FULL TIME</div>
+      <h2 class="big-h">FINAL SCORE</h2>
+      <div id="winnerBanner" class="winner">YOU WIN</div>
+      <div class="break-scores">
+        <div><label>PLAYER</label><b id="finalYou">0</b></div>
+        <div><label>COMPUTER</label><b id="finalCpu">0</b></div>
+      </div>
+      <p id="winMargin" class="muted"></p>
+      <ol id="finalHistory" class="mini-history"></ol>
+      <button id="btnAgain" class="btn primary big">PLAY AGAIN</button>
+      <button class="btn link" data-nav="rules">REVIEW RULEBOOK</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="brand-foot" aria-label="Site credit">
+  <p class="foot-powered">Powered by <a class="dev-link" href="https://www.vortexflowmedia.site" target="_blank" rel="noopener noreferrer">VortexFlow Media</a></p>
+  <p class="foot-dev">Developed by <a class="dev-link" href="https://github.com/srivastavsai-arch" target="_blank" rel="noopener noreferrer">Srivastav Sai</a></p>
+  <p class="foot-privacy"><a class="privacy-link" href="privacy.html">Privacy Policy</a></p>
+</footer>
+
+<script src="js/input-provider.js"></script>
+<script src="js/ai-engine.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/gesture-spec.js"></script>
+<script src="js/hand-gestures.js"></script>
+<script src="js/camera-input.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
