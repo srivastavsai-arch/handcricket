@@ -72,6 +72,7 @@ NODE_HARNESS = textwrap.dedent("""
     sandbox.window.requestAnimationFrame = sandbox.requestAnimationFrame;
     sandbox.window.cancelAnimationFrame = sandbox.cancelAnimationFrame;
     vm.createContext(sandbox);
+    vm.runInContext(fs.readFileSync('frontend/js/gesture-spec.js', 'utf8'), sandbox);
     vm.runInContext(fs.readFileSync('frontend/js/hand-gestures.js', 'utf8'), sandbox);
     vm.runInContext(fs.readFileSync('frontend/js/camera-input.js', 'utf8'), sandbox);
     const CAM = sandbox.window.HCCamera;
