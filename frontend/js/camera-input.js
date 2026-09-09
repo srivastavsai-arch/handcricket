@@ -24,6 +24,11 @@
 (function () {
   var HANDS_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js';
   var HANDS_LOCATE = 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/';
+  // Pinned integrity of the exact versioned file above (sha384 of the
+  // response bytes). If the CDN ever serves different bytes, the load is
+  // refused and pad play keeps working. Recompute if the version changes:
+  //   curl -sL <HANDS_URL> | openssl dgst -sha384 -binary | openssl base64 -A
+  var HANDS_SRI = 'sha384-oHwoZ9HyKv5ark5VOH+XWdbNfmhYtptAOBuV8plz6mAfXvTA6d8fULuYllWouEK2';
   var NEED_STABLE = 6;
   var ABSENT_TO_RELEASE = 6;
 
@@ -91,6 +96,8 @@
       var s = document.createElement('script');
       s.src = HANDS_URL;
       s.async = true;
+      s.crossOrigin = 'anonymous';
+      s.integrity = HANDS_SRI;
       s.onload = function () { resolve(); };
       s.onerror = function () { reject(new Error('hand library failed')); };
       document.head.appendChild(s);

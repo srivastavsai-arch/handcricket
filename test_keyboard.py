@@ -8,6 +8,9 @@ Runs under plain node (no browser needed) via vm with a window stub.
 import subprocess
 import textwrap
 import json
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent
 
 NODE_HARNESS = textwrap.dedent("""
     const fs = require('fs');
@@ -89,7 +92,7 @@ NODE_HARNESS = textwrap.dedent("""
 def test_keyboard_provider_unit():
     proc = subprocess.run(
         ["node", "-e", NODE_HARNESS],
-        cwd="G:/NEW AI TRIAL/cric",
+        cwd=str(REPO_ROOT),
         capture_output=True, text=True, timeout=60,
     )
     assert proc.returncode == 0, f"node harness failed:\n{proc.stderr}"
