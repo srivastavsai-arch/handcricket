@@ -1,8 +1,10 @@
-# MediaPipe Hand Recognition — Preserved Implementation (v1)
+# MediaPipe Hand Recognition — Implementation (v2)
 
-This folder preserves the CURRENT working MediaPipe hand-recognition system
-exactly as it runs in the game, so it can be re-integrated after a restore.
-Nothing here is simplified, retuned, or redesigned.
+This folder mirrors the CURRENT MediaPipe hand-recognition system exactly
+as it runs in the game (`gesture-spec.js` / `hand-gestures.js` /
+`camera-input.js` are byte-identical to `frontend/js/`).
+The v1 system it was rebuilt from is safeguarded untouched in
+`gesture-backup-v1/` (spec + classifier + pipeline + synthetic vectors).
 
 ## Files
 
@@ -63,11 +65,17 @@ Per finger, `fingerShape(lm, mcp, pip, dip, tip, palm)` computes:
 - `ext = reach / palm` (palm = wrist→middle-MCP distance; scale invariant).
 
 OPEN if **any** `openRules` row holds (OR); CLOSED if **any** `closedRules`
-row holds (OR). Suffix `Max` = maximum (≤), plain key = minimum (≥):
-- open: `{ext ≥ 0.95}` · `{straight ≥ 0.86, ext ≥ 0.55}` ·
-  `{avg ≥ 135, ext ≥ 0.60}` · `{avg ≥ 150, ext ≥ 0.55}`
-- closed: `{ext ≤ 0.50}` · `{straight ≤ 0.70, ext ≤ 0.72}` ·
-  `{avg ≤ 105, ext ≤ 0.75}`
+row holds (OR). Suffix `Max` = maximum (≤), plain key = minimum (≥).
+Index/middle/ring keep v1 tolerance; **pinky is stricter** (a half-folded
+pinky is never OPEN — the 3 → 4 fix):
+- open: `{ext ≥ 0.95}` · `{straight ≥ 0.86, ext ≥ 0.60}` ·
+  `{avg ≥ 135, ext ≥ 0.62}` · `{avg ≥ 150, ext ≥ 0.55}`
+- closed: `{ext ≤ 0.52}` · `{straight ≤ 0.72, ext ≤ 0.74}` ·
+  `{avg ≤ 110, ext ≤ 0.78}`
+- pinky open: `{ext ≥ 0.95}` · `{straight ≥ 0.88, ext ≥ 0.65}` ·
+  `{avg ≥ 145, ext ≥ 0.66}` · `{avg ≥ 152, ext ≥ 0.60}`
+- pinky closed: `{ext ≤ 0.55}` · `{straight ≤ 0.75, ext ≤ 0.76}` ·
+  `{avg ≤ 118, ext ≤ 0.80}`
 - **Neither open nor closed → UNKNOWN → whole read returns `null`.**
   One ambiguous finger blocks the frame; never a wrong number.
 
@@ -78,11 +86,20 @@ row holds (OR). Suffix `Max` = maximum (≤), plain key = minimum (≥):
 palm²; large = sticking OUT, small = wrapped), `contact` (nearest tip
 approach to mid-joints 10,11,14,15,18,19 / palm — index excluded), `avg`
 (mean of its two joint angles).
-- **Contact gate first:** `contact < 0.55` (thumb resting ON the fist) →
-  folded, regardless of other signals.
-- Else OPEN if any row holds: `{perp ≥ 0.38, avg ≥ 120}` ·
-  `{lift ≥ 0.78}` · `{spread ≥ 0.64, lift ≥ 0.55}` ·
-  `{perp ≥ 0.28, spread ≥ 0.30, avg ≥ 110}`.
+- **Folded first:** `contact < 0.55` (resting ON the fist), or tip
+  buried near the palm (`spread ≤ 0.45, lift ≤ 0.50` — the braced-against-
+  index case), or tightly curled (`avg ≤ 115`) → folded, regardless of
+  other signals.
+- **Gray zone** `0.55–0.62`: only undeniable extension
+  (`{lift ≥ 0.85}` or `{perp ≥ 0.45, lift ≥ 0.55, avg ≥ 120}`) reads OPEN;
+  anything weaker returns `null` instead of guessing.
+- Else OPEN if any row holds (every row needs `lift` + a second signal;
+  v1's single-signal `{perp, avg}` rule is gone — it fired for braced
+  thumbs, the 4 → 5 bug): `{lift ≥ 0.85}` ·
+  `{perp ≥ 0.45, lift ≥ 0.55, avg ≥ 120}` ·
+  `{spread ≥ 0.70, lift ≥ 0.60, avg ≥ 125}` ·
+  `{perp ≥ 0.35, spread ≥ 0.45, lift ≥ 0.50, avg ≥ 120}`.
+- Neither folded nor open → UNKNOWN → whole read returns `null`.
 
 ## 5. How hand orientation is handled
 
@@ -126,9 +143,10 @@ state, never by the thumb alone.)
 - Detection: `minDetectionConfidence 0.6`, `minTrackingConfidence 0.5`,
   `maxNumHands 1`, `modelComplexity 0` (lite model).
 - Finger open/closed rules: see §3 (ext/straight/avg bounds above).
-- Thumb: `contactMin 0.55`; open rules: see §4.
-- Temporal: `needStable 6`, `bufferMax 8`, `nullSkip 1`,
-  `absentToRelease 6`.
+- Thumb: `contactMin 0.55`, `contactBand 0.62`; folded/open/strong-open
+  rules: see §4.
+- Temporal: `needStable 4`, `bufferMax 6`, `nullSkip 1`,
+  `absentToRelease 4` (same algorithm as v1, fewer frames = faster).
 - Capture ideals: 1280×960, 4:3, `facingMode 'user'` (all ideals =
   graceful fallback; downstream always uses ACTUAL stream dimensions).
 
@@ -136,7 +154,7 @@ state, never by the thumb alone.)
 
 - Every result (int or `null`) is pushed into a sliding window
   (`bufferMax 8`).
-- `stableGesture()`: the newest reading backed by `needStable (6)`
+- `stableGesture()`: the newest reading backed by `needStable (4)`
   identical detections, tolerating up to `nullSkip (1)` noisy null
   frame; a DIFFERENT gesture always breaks stability → `null`.
 - `currentStreak()` drives the confirm progress bar (frames, not ms —

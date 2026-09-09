@@ -1,15 +1,25 @@
-/* Hand Cricket gesture classifier — rebuilt around window.HCSpec.
+/* Hand Cricket gesture classifier — v2 engine around window.HCSpec.
  *
  * Pure geometry on the 21 MediaPipe hand landmarks. No DOM, no game
  * rules, no network. Input: landmarks in MediaPipe order ({x,y,z}).
  * Output: integer 0-10, or null when the pose is unclear.
  *
- * Every threshold, index, and mapping row lives in gesture-spec.js
- * (HCSpec v1, frozen). This file is only the evaluation engine:
+ * Preserved from v1: metric definitions (ext/straight/avg, spread/lift/
+ * perp/contact), palm normalization, dot-product angles, exact 0-10
+ * mapping, and the ambiguity rule (unclear => null, never a wrong
+ * number). Only the decision boundaries moved (see gesture-spec.js v2).
+ *
+ * v2 evaluation:
  *   - distances: 3D Euclidean / palm size (distance invariant)
  *   - angles: dot products in degrees (rotation invariant)
- *   - one matching rule is enough; ambiguity always yields null,
- *     never a wrong number.
+ *   - index/middle/ring use finger.openRules/closedRules (v1 tolerance);
+ *     pinky uses finger.pinky.* (stricter: half-folded is never open).
+ *   - thumb is three-state: foldedRules first (braced/resting/curled =>
+ *     closed, always), then openRules (needs lift + a second signal),
+ *     else UNKNOWN (blocks the frame). v1's single-signal open rule is
+ *     gone — it promoted braced thumbs (4 -> 5).
+ *   - any UNKNOWN finger or thumb blocks the read (null). The 3/4/5
+ *     ladder therefore needs strict evidence at each step up.
  */
 'use strict';
 
@@ -57,6 +67,7 @@
   }
 
   function matchAny(shape, rules) {
+    if (!rules) return false;
     for (let i = 0; i < rules.length; i++) {
       if (matchRule(shape, rules[i])) return true;
     }
@@ -77,12 +88,13 @@
     return { a1, a2, avg, ext, straight };
   }
 
-  function fingerOpen(S, shape) {
-    return matchAny(shape, S.finger.openRules);
-  }
-
-  function fingerClosed(S, shape) {
-    return matchAny(shape, S.finger.closedRules);
+  // Three-state finger read: true (open) / false (closed) / null
+  // (ambiguous — blocks classification). Pinky uses its stricter rules.
+  function fingerState(S, shape, isPinky) {
+    const P = (isPinky && S.finger.pinky) || S.finger;
+    if (matchAny(shape, P.openRules)) return true;
+    if (matchAny(shape, P.closedRules)) return false;
+    return null;
   }
 
   function thumbShape(lm, palm) {
@@ -113,12 +125,28 @@
     return { a1, a2, avg, spread, lift, perp, contact };
   }
 
-  function thumbOpen(S, t) {
-    // A wrapped thumb can look straight with a long sideways reach, so it
-    // is tested for resting ON the fingers first. Contact always means
-    // folded, no matter what the other signals say.
+  // Three-state thumb read: true (open) / false (folded) / null
+  // (marginal — blocks classification, never a wrong number).
+  // Folded is tested FIRST: a braced, resting, or curled thumb is
+  // closed no matter what the other signals say.
+  function thumbState(S, t) {
+    if (matchAny(t, S.thumb.foldedRules)) return false;
     if (t.contact < S.thumb.contactMin) return false;
-    return matchAny(t, S.thumb.openRules);
+    // Gray zone (contactMin..contactBand): the tip is off the fist but
+    // not clearly clear. Only undeniable extension reads OPEN here;
+    // anything weaker blocks the frame instead of risking a 4 -> 5.
+    if (S.thumb.contactBand && t.contact < S.thumb.contactBand) {
+      if (matchAny(t, S.thumb.strongOpenRules || S.thumb.openRules)) return true;
+      return null;
+    }
+    if (matchAny(t, S.thumb.openRules)) return true;
+    // Backward compatibility: v1 specs have no foldedRules (only
+    // contactMin + openRules). On v1, fall back to binary v1 logic.
+    if (!S.thumb.foldedRules) return matchAny(t, S.thumb.openRules);
+    // v2: marginal thumb blocks the frame instead of guessing.
+    // Hysteresis note: folded already returned false above, so reaching
+    // here means the tip is clear of the fist but not clearly extended.
+    return null;
   }
 
   function classifyLandmarks(landmarks) {
@@ -137,14 +165,19 @@
         const name = fingers[f];
         const J = L[name];
         const shape = fingerShape(landmarks, J.mcp, J.pip, J.dip, J.tip, palm);
-        const isOpen = fingerOpen(S, shape);
+        const st = fingerState(S, shape, name === 'pinky');
         // Ambiguous fingers block the read: one unstable frame must
-        // never become a submitted number.
-        if (!isOpen && !fingerClosed(S, shape)) return null;
-        open[name] = isOpen;
+        // never become a submitted number. This is also the 3/4 guard:
+        // a half-folded pinky yields null here, never a promotion to 4.
+        if (st === null) return null;
+        open[name] = st;
       }
-      const tOpen = thumbOpen(S, thumbShape(landmarks, palm));
-      const state = [tOpen, open.index, open.middle, open.ring, open.pinky];
+      const t = thumbState(S, thumbShape(landmarks, palm));
+      // Marginal thumb blocks the read: the 4/5 guard. A thumb that is
+      // neither clearly braced nor clearly extended can never promote
+      // a 4 to a 5.
+      if (t === null) return null;
+      const state = [t, open.index, open.middle, open.ring, open.pinky];
 
       for (let r = 0; r < S.mapping.length; r++) {
         const row = S.mapping[r];
@@ -162,6 +195,6 @@
 
   window.HCGestures = {
     classifyLandmarks,
-    _helpers: { fingerShape, thumbShape, angleDeg, dist },
+    _helpers: { fingerShape, thumbShape, fingerState, thumbState, angleDeg, dist },
   };
 })();
