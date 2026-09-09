@@ -14,10 +14,13 @@
  *   - angles: dot products in degrees (rotation invariant)
  *   - index/middle/ring use finger.openRules/closedRules (v1 tolerance);
  *     pinky uses finger.pinky.* (stricter: half-folded is never open).
- *   - thumb is three-state: foldedRules first (braced/resting/curled =>
- *     closed, always), then openRules (needs lift + a second signal),
- *     else UNKNOWN (blocks the frame). v1's single-signal open rule is
- *     gone — it promoted braced thumbs (4 -> 5).
+  *   - thumb is three-state: foldedRules first (braced/resting/curled/
+  *     behind => closed, always), then openRules (needs lift + a second
+  *     signal + palm-plane side), else UNKNOWN (blocks the frame). v1's
+  *     single-signal open rule is gone — it promoted braced thumbs
+  *     (4 -> 5). side/depth split the tip offset into palm-plane lateral
+  *     vs out-of-plane so a behind-thumb (small side, large depth) reads
+  *     folded, never open (back-of-hand 3/4 fix).
  *   - any UNKNOWN finger or thumb blocks the read (null). The 3/4/5
  *     ladder therefore needs strict evidence at each step up.
  */
@@ -103,6 +106,7 @@
     const wrist = pt(lm, 0);
     const cmc = pt(lm, 1), mcp = pt(lm, 2), ip = pt(lm, 3), tip = pt(lm, 4);
     const indexMcp = pt(lm, 5), midMcp = pt(lm, 9);
+    const ringMcp = pt(lm, 13), pinkyMcp = pt(lm, 17);
     const a1 = angleDeg(cmc, mcp, ip);
     const a2 = angleDeg(mcp, ip, tip);
     const avg = (a1 + a2) / 2;
@@ -114,6 +118,35 @@
     const bx = tip.x - wrist.x, by = tip.y - wrist.y, bz = tip.z - wrist.z;
     const cx = ay * bz - az * by, cy = az * bx - ax * bz, cz = ax * by - ay * bx;
     const perp = Math.sqrt(cx * cx + cy * cy + cz * cz) / (palm * palm);
+    // Palm-plane orientation (back-of-hand aware, hand landmarks only).
+    // Normal from wrist->index x wrist->pinky; center = mean of wrist +
+    // 4 knuckles. Decompose tip-center into lateral in-plane (side) vs
+    // out-of-plane (depth). A thumb tucked BEHIND the hand has small side
+    // even when its 3D lift/spread/perp look large from depth (z) alone.
+    // Genuine extension is lateral (sticks OUT of the silhouette).
+    // Rotation/handedness independent (magnitudes only).
+    const pcx = (wrist.x + indexMcp.x + midMcp.x + ringMcp.x + pinkyMcp.x) / 5;
+    const pcy = (wrist.y + indexMcp.y + midMcp.y + ringMcp.y + pinkyMcp.y) / 5;
+    const pcz = (wrist.z + indexMcp.z + midMcp.z + ringMcp.z + pinkyMcp.z) / 5;
+    const ux = indexMcp.x - wrist.x, uy = indexMcp.y - wrist.y, uz = indexMcp.z - wrist.z;
+    const vx = pinkyMcp.x - wrist.x, vy = pinkyMcp.y - wrist.y, vz = pinkyMcp.z - wrist.z;
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const nn = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    let side, depth;
+    if (!(nn > 1e-9)) {
+      // Degenerate palm (never in practice): sit in the UNKNOWN band so
+      // the frame blocks instead of guessing a wrong number.
+      side = 0.37;
+      depth = 0;
+    } else {
+      const wx = tip.x - pcx, wy = tip.y - pcy, wz = tip.z - pcz;
+      const vdotn = wx * nx + wy * ny + wz * nz;
+      const axial = vdotn / nn;
+      const v2 = wx * wx + wy * wy + wz * wz;
+      const lat2 = Math.max(0, v2 - axial * axial);
+      side = Math.sqrt(lat2) / palm;
+      depth = Math.abs(axial) / palm;
+    }
     // Nearest approach to the middle/ring/pinky mid-joints. A wrapped
     // thumb rests ON them (small) even when it reaches far sideways.
     const contactIdx = (L && L.thumb.contactIndices) || [10, 11, 14, 15, 18, 19];
@@ -122,7 +155,7 @@
       const d = dist(tip, pt(lm, i)) / palm;
       if (d < contact) contact = d;
     });
-    return { a1, a2, avg, spread, lift, perp, contact };
+    return { a1, a2, avg, spread, lift, perp, contact, side, depth };
   }
 
   // Three-state thumb read: true (open) / false (folded) / null

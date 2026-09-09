@@ -129,6 +129,22 @@
     //           large when the thumb sticks OUT, small when wrapped.
     // contact = nearest tip approach to middle/ring/pinky mid-joints
     //           (indices 10,11,14,15,18,19; index excluded on purpose).
+    // side    = lateral in-plane tip distance from the palm center
+    //           (mean of wrist + 4 knuckles), projected onto the palm plane
+    //           (normal = wrist->index x wrist->pinky), / palm. Large only
+    //           when the thumb genuinely sticks OUT of the silhouette.
+    // depth   = out-of-plane tip distance from the palm center / palm.
+    //           Large when the thumb sits BEHIND/IN FRONT (back-of-hand tuck).
+    //
+    // Back-of-hand fix: spread/lift/perp/contact are full-3D, so a thumb
+    // tucked BEHIND the palm inflates them with depth (z) and can fake
+    // OPEN (the 3/4 -> 5 bug: straight behind-thumb + depth = perp/spread/
+    // lift pass). side is depth-free by construction (palm-plane lateral),
+    // so behind-thumbs score small side (~0.06-0.21) while genuine open
+    // thumbs score large side (~0.66+). foldedRules catch small side as
+    // folded; every open path additionally requires side, so depth alone
+    // can never read OPEN. No thresholds were raised blindly: the new
+    // geometry, not a stricter old number, carries the decision.
     //
     // v2 is two-sided. foldedRules are checked FIRST: any match means the
     // thumb is braced/resting/curled and can never read OPEN, no matter
@@ -149,16 +165,17 @@
         { contactMax: 0.55 },
         { spreadMax: 0.45, liftMax: 0.50 },
         { avgMax: 115 },
+        { sideMax: 0.34 }, // behind/tucked: tip projects inside the palm
       ],
       strongOpenRules: [
-        { lift: 0.85 },
-        { perp: 0.45, lift: 0.55, avg: 120 },
+        { lift: 0.85, side: 0.40 },
+        { perp: 0.45, lift: 0.55, avg: 120, side: 0.40 },
       ],
       openRules: [
-        { lift: 0.85 },
-        { perp: 0.45, lift: 0.62, avg: 120 },
-        { spread: 0.70, lift: 0.60, avg: 125 },
-        { perp: 0.35, spread: 0.45, lift: 0.50, avg: 120 },
+        { lift: 0.85, side: 0.40 },
+        { perp: 0.45, lift: 0.62, avg: 120, side: 0.40 },
+        { spread: 0.70, lift: 0.60, avg: 125, side: 0.40 },
+        { perp: 0.35, spread: 0.45, lift: 0.50, avg: 120, side: 0.40 },
       ],
     },
 
