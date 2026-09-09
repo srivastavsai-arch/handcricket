@@ -156,7 +156,7 @@
       ],
       openRules: [
         { lift: 0.85 },
-        { perp: 0.45, lift: 0.55, avg: 120 },
+        { perp: 0.45, lift: 0.62, avg: 120 },
         { spread: 0.70, lift: 0.60, avg: 125 },
         { perp: 0.35, spread: 0.45, lift: 0.50, avg: 120 },
       ],
