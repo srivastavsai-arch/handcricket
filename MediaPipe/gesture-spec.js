@@ -1,8 +1,26 @@
 /* Hand Cricket gesture specification — REFERENCE (v2).
  *
- * Preserves ALL v1 gesture knowledge (landmark layout, 0-10 mapping,
- * tolerance philosophy, pipeline, MediaPipe + capture config) and rebuilds
- * the recognition thresholds that caused the 3/4 -> 5 confusion.
+ * Recovers the MediaPipe gesture knowledge developed in the previous
+ * implementation — landmark geometry, finger/thumb detection, angles,
+ * distances, rotation handling, stabilization, confirmation, release,
+ * duplicate-input prevention — and rebuilds the recognition thresholds
+ * that caused the 3/4 -> 5 confusion.
+ *
+ * Prior-design audit (early strict classifier, mid loosening, final v1
+ * audit; pipeline constants needStable 6 / bufferMax 8 / nullSkip 1 /
+ * absentToRelease 6 never changed):
+ * - Recovered: full-3D Euclidean metrics at full depth weight (keeps
+ *   reach correct when the hand tilts); palm normalization; dot-product
+ *   angles; contact-gate-first thumb with index excluded; exact 0-10
+ *   mapping; ambiguity-returns-null; skeleton independent of reading;
+ *   one-gesture-one-input + release tracking.
+ * - Recovered: the early strict-finger insight (a half-folded finger
+ *   must never read OPEN) — applied to the pinky, the proven 3 -> 4
+ *   culprit, instead of blanket strictness (blanket strictness also
+ *   nulled genuinely bent counted fingers and never fixed the braced
+ *   thumb, both verified head-to-head; those parts were NOT taken).
+ * - Not taken (deliberately): old game/UI/HTML/CSS/architecture/camera
+ *   lifecycle/AI/scoring/config — current pipeline stays as-is.
  *
  * What was preserved from v1 (unchanged):
  * - MediaPipe landmark layout + skeleton links (display only).
