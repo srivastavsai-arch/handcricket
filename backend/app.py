@@ -88,10 +88,6 @@ def create_app() -> Flask:
     def privacy():
         return send_from_directory(FRONTEND_DIR, "privacy.html")
 
-    @app.get("/report")
-    def report():
-        return send_from_directory(FRONTEND_DIR, "report.html")
-
     @app.get("/health")
     def health():
         return {"ok": True, "game": "hand-cricket", "version": "2-prototype"}
