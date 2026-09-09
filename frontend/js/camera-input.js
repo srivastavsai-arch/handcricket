@@ -35,6 +35,7 @@
   var state = {
     active: false,
     starting: false,
+    startSeq: 0, // generation counter: invalidates stale async starts
     stream: null,
     hands: null,
     rafId: 0,
@@ -99,7 +100,9 @@
       s.crossOrigin = 'anonymous';
       s.integrity = HANDS_SRI;
       s.onload = function () { resolve(); };
-      s.onerror = function () { reject(new Error('hand library failed')); };
+      // A failed load must not poison later attempts: drop the cached
+      // promise so reopening Camera Mode retries the fetch.
+      s.onerror = function () { loadHandsScript._p = null; reject(new Error('hand library failed')); };
       document.head.appendChild(s);
     });
     return loadHandsScript._p;
@@ -175,6 +178,27 @@
       viewBox.vw = w;
       viewBox.vh = h;
     }
+  }
+
+  // MediaPipe must never see a not-yet-ready frame: resolve only once the
+  // video reports REAL dimensions (guards the videoWidth/videoHeight == 0
+  // startup window). Polls briefly, then fails into the friendly error UI.
+  // isCancelled (the start generation check) aborts the wait silently.
+  function waitForVideo(video, attempts, isCancelled) {
+    var ready = false;
+    try {
+      ready = !!video && video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2;
+    } catch (e) { ready = false; }
+    if (ready) return Promise.resolve();
+    if (typeof isCancelled === 'function' && isCancelled()) {
+      var stale = new Error('camera start superseded');
+      stale.name = 'StaleStart';
+      return Promise.reject(stale);
+    }
+    if ((attempts || 0) > 100) return Promise.reject(new Error('no video frames'));
+    return new Promise(function (res) { setTimeout(res, 50); }).then(function () {
+      return waitForVideo(video, (attempts || 0) + 1, isCancelled);
+    });
   }
 
   function resetBuffer() {
@@ -358,6 +382,10 @@
   function stop() {
     state.active = false;
     state.starting = false;
+    // Invalidate any start() that is still awaiting permission, the
+    // script, or first frames: its continuations must die silently
+    // instead of leaking a second stream/loop behind closed UI.
+    state.startSeq = (state.startSeq || 0) + 1;
     if (state.rafId) {
       try { cancelAnimationFrame(state.rafId); } catch (e) {}
       state.rafId = 0;
@@ -394,6 +422,21 @@
     opts = opts || {};
     if (state.active || state.starting) return Promise.resolve();
     state.starting = true;
+    // Generation token for this start attempt. stop() bumps startSeq,
+    // so any continuation below can tell it was superseded and must
+    // release what it holds and stay silent (no error UI, no loop).
+    var myStart = (state.startSeq = (state.startSeq || 0) + 1);
+    function isStale() { return state.startSeq !== myStart; }
+    function staleError() {
+      var err = new Error('camera start superseded');
+      err.name = 'StaleStart';
+      return err;
+    }
+    function dropStream(stream) {
+      try {
+        if (stream) stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+      } catch (e) {}
+    }
     showError(null);
     setLine('camHandStatus', 'Starting camera…');
     setLine('camGestureStatus', 'Seen: •');
@@ -412,12 +455,25 @@
     state.onConfirm = typeof opts.onConfirm === 'function' ? opts.onConfirm : null;
 
     return loadHandsScript().then(function () {
-      if (!window.Hands) throw new Error('hand library missing');
+      if (isStale()) throw staleError();
+      if (!window.Hands) { loadHandsScript._p = null; throw new Error('hand library missing'); }
       return navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        // True 4:3 capture (1280x960 class): 720p-grade detail with the
+        // 4:3 frame the UI and overlay are built for. All ideals, so a
+        // device falls back to its nearest supported mode (commonly
+        // 960x720 or 640x480 — also 4:3) instead of failing. Overlay and
+        // classifier always use the ACTUAL live video dimensions below,
+        // never assumed ones.
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 960 },
+          aspectRatio: { ideal: 4 / 3 },
+        },
         audio: false,
       });
     }).then(function (stream) {
+      if (isStale()) { dropStream(stream); throw staleError(); }
       state.stream = stream;
       var video = el('camVideo');
       if (!video) throw new Error('no preview');
@@ -425,6 +481,16 @@
       video.muted = true;
       try { video.playsInline = true; } catch (e) {}
       return video.play().then(function () {
+        if (isStale()) {
+          if (state.stream === stream) state.stream = null;
+          dropStream(stream);
+          try { video.srcObject = null; } catch (e) {}
+          throw staleError();
+        }
+        // Never feed MediaPipe a not-yet-ready frame (zero dimensions).
+        return waitForVideo(video, 0, isStale);
+      }).then(function () {
+        if (isStale()) throw staleError(); // closed/restarted while waiting
         fitCanvas();
         var hands = new window.Hands({
           locateFile: function (f) { return HANDS_LOCATE + f; },
@@ -452,6 +518,9 @@
       });
     }).catch(function (err) {
       state.starting = false;
+      // Superseded by stop()/restart: resources already released above,
+      // UI already reset by stop(). Stay completely silent.
+      if (err && err.name === 'StaleStart') return;
       var name = err && err.name ? err.name : '';
       if (name === 'NotAllowedError' || name === 'SecurityError') {
         showError('Camera blocked. You can keep playing with clicks.');
